@@ -9,8 +9,8 @@
 
 struct
 {
-  struct spinlock lock;
-  struct proc proc[NPROC];
+  struct spinlock lock; //Lock Information
+  struct proc proc[NPROC]; //최대 프로세스 개수(NPROC)만큼의 PCB 공간
 } ptable;
 
 static struct proc *initproc;
@@ -38,7 +38,7 @@ struct cpu *
 mycpu(void)
 {
   int apicid, i;
-
+  //1. 
   if (readeflags() & FL_IF)
     panic("mycpu called with interrupts enabled\n");
 
@@ -545,8 +545,9 @@ void procdump(void)
 
 int getpname(int pid)
 {
+  //1. PCB 포인터 생성
   struct proc *p;
-
+  //2. 
   acquire(&ptable.lock);
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   {

@@ -105,8 +105,9 @@ void
 pushcli(void)
 {
   int eflags;
-
+  //1. 현재 efalgs값 저장
   eflags = readeflags();
+  //2. CPU로 들어오는 인터럽트 비활성화
   cli();
   if(mycpu()->ncli == 0)
     mycpu()->intena = eflags & FL_IF;

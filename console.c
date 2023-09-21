@@ -20,8 +20,8 @@ static void consputc(int);
 static int panicked = 0;
 
 static struct {
-  struct spinlock lock;
-  int locking;
+  struct spinlock lock; //락 정보
+  int locking; //락 중인지 아닌지
 } cons;
 
 static void
@@ -106,10 +106,15 @@ cprintf(char *fmt, ...)
 void
 panic(char *s)
 {
+  /*
+    예상치 못한 오류 발생시 시스템 중지하고 관련 정보(*s)출력
+  */
   int i;
   uint pcs[10];
 
+  //1. CPU로 들어오는 모든 인터럽트 비활성화 
   cli();
+  //2. console 락 해제 상태
   cons.locking = 0;
   // use lapiccpunum so that we can call panic from mycpu()
   cprintf("lapicid %d: panic: ", lapicid());
