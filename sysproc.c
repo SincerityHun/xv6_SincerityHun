@@ -94,9 +94,39 @@ int
 sys_getpname(void)
 {
   int pid;
-  //1. 현재 프로세스에서 첫 번째 인자를 가져와서 pid란 변수에 넣어둔다.
+
   if(argint(0, &pid)<0)
     return -1;
-  //2. 그리고 getpname 부름
   return getpname(pid);
 }
+int
+sys_getnice(void)
+{
+  int pid;
+  if(argint(0,&pid)<0)
+    return -1;
+  return getnice(pid);
+}
+
+int
+sys_setnice(void)
+{
+  int pid,value;
+  if(argint(0,&pid)<0)
+    return -1;
+  if(argint(1,&value)<0)
+    return -1;
+  return setnice(pid,value);
+}
+
+int
+sys_ps(void)
+{
+  int pid;
+  if(argint(0, &pid)<0)
+    return -1;
+  ps(pid);
+  return 0;
+}
+
+

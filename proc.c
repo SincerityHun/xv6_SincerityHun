@@ -38,7 +38,7 @@ struct cpu *
 mycpu(void)
 {
   int apicid, i;
-  //1. 
+
   if (readeflags() & FL_IF)
     panic("mycpu called with interrupts enabled\n");
 
@@ -98,6 +98,7 @@ found:
   //1. EMBRYO -> Process 상태 초기화 중
   p->state = EMBRYO;
   p->pid = nextpid++;
+  p->nice = 20;
 
   //2. ptable lock 풀기
   release(&ptable.lock);
@@ -556,27 +557,101 @@ void procdump(void)
 
 int getpname(int pid)
 {
-  /*
-  pid에 해당하는 프로세스의 이름을 출력하고 존재하면 0 반환, 없으면 -1 반환
-  */
   struct proc *p;
-  //1. Process Table Lock 걸기
-  acquire(&ptable.lock);
 
-  //2. Process Table의 모든 Process 순회
+  acquire(&ptable.lock);
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   {
-    // 3. 이때 Process의 pid가 우리가 찾고 싶어하는 pid와 같다면?
     if (p->pid == pid)
     {
-      // 4. Process의 name 출력
       cprintf("%s\n", p->name);
-      // 5. Process Table Lock 풀기
       release(&ptable.lock);
       return 0;
     }
   }
-  // 6. 못찾아도 Process table Lock 풀기
   release(&ptable.lock);
   return -1;
+}
+
+int getnice(int pid)
+{
+  struct proc* p;
+  acquire(&ptable.lock);
+  for (p=ptable.proc; p < &ptable.proc[NPROC];p++)
+  {
+    if(p->pid == pid)
+    {
+      int result = p->nice;
+      release(&ptable.lock);
+      return result;
+    }
+  }
+  release(&ptable.lock);
+  return -1;
+}
+
+int setnice(int pid, int value)
+{
+  if (value < 0 || value > 39)
+  {
+    return -1;
+  }
+
+  struct proc* p;
+  acquire(&ptable.lock);
+  for (p=ptable.proc; p < &ptable.proc[NPROC]; p++)
+  {
+    if(p->pid == pid)
+    {
+      p->nice = value;
+      release(&ptable.lock);
+      return 0;
+    }
+  }
+  release(&ptable.lock);
+  return -1;
+}
+
+void ps(int pid)
+{
+  struct proc* p;
+  struct proc* temp[NPROC];
+  int count = 0;
+  const char* stateNames[] = {"UNUSED", "EMBRYO", "SLEEPING", "RUNNABLE", "RUNNING", "ZOMBIE"};
+  acquire(&ptable.lock);
+  if(pid)
+  {
+    for(p=ptable.proc; p < &ptable.proc[NPROC]; p++)
+    {
+      if(p->pid == pid && p->state != UNUSED)
+      {
+        cprintf("%12s%12s%12s%12s\n","name","pid","state","priority"); // Space 12
+        cprintf("%12s%12d%12s%12d\n",p->name,p->pid,stateNames[p->state],p->nice);
+        release(&ptable.lock);
+        return;
+      }
+    }
+  }
+  else
+  {
+    for(p=ptable.proc; p< &ptable.proc[NPROC];p++)
+    {
+      if(p->state != UNUSED)
+      {
+        temp[count++] = p;
+      }
+    }
+    if(count)
+    {
+      cprintf("%12s%12s%12s%12s\n","name","pid","state","priority");
+    }
+    for(int i = 0; i < count; i++)
+    {
+      cprintf("%12s%12d%12s%12d\n",temp[i]->name,temp[i]->pid,stateNames[temp[i]->state],temp[i]->nice);
+    }
+    release(&ptable.lock);
+    return;
+  }
+  release(&ptable.lock);
+  return;
 }
