@@ -105,9 +105,9 @@ void
 pushcli(void)
 {
   int eflags;
-  // 1. 현재 레지스터 상태 저장
+  //1. 현재 efalgs값 저장
   eflags = readeflags();
-  // 2. 인터럽트 비활성화
+  //2. CPU로 들어오는 인터럽트 비활성화
   cli();
   // 3. 지금 처음으로 pushcli가 호출된거야? 처음이면 ncli가 0이겠지? 중첩이 안되었을 거니까?
   if(mycpu()->ncli == 0)

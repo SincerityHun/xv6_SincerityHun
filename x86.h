@@ -94,6 +94,7 @@ ltr(ushort sel)
 static inline uint
 readeflags(void)
 {
+  //eflags 레지스터 32개의 비트를 32비트 uint에 저장해 반환하는 것
   uint eflags;
   asm volatile("pushfl; popl %0" : "=r" (eflags));
   return eflags;
@@ -108,6 +109,7 @@ loadgs(ushort v)
 static inline void
 cli(void)
 {
+  //CPU로 들어오는 모든 하드웨어 인터럽트 비활성화
   asm volatile("cli");
 }
 
