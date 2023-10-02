@@ -94,8 +94,9 @@ int
 sys_getpname(void)
 {
   int pid;
-
+  //1. 현재 프로세스에서 첫 번째 인자를 가져와서 pid란 변수에 넣어둔다.
   if(argint(0, &pid)<0)
     return -1;
+  //2. 그리고 getpname 부름
   return getpname(pid);
 }

@@ -105,21 +105,27 @@ void
 pushcli(void)
 {
   int eflags;
-
+  // 1. 현재 레지스터 상태 저장
   eflags = readeflags();
+  // 2. 인터럽트 비활성화
   cli();
+  // 3. 지금 처음으로 pushcli가 호출된거야? 처음이면 ncli가 0이겠지? 중첩이 안되었을 거니까?
   if(mycpu()->ncli == 0)
-    mycpu()->intena = eflags & FL_IF;
+    mycpu()->intena = eflags & FL_IF; // Interrupt Flag 정보를 intena에 저장함으로써 기존에 인터럽트 정보를 저장해둔다.(복원용)
+  // 4. puchli의 깊이 저장
   mycpu()->ncli += 1;
 }
 
 void
 popcli(void)
 {
+  //1. IF 플래그가 활성화되어 있어? 활성화 되어 있으면 하드웨어 인터럽트를 받을 수 있는건데 그러면 시스템 패닉!
   if(readeflags()&FL_IF)
     panic("popcli - interruptible");
+  //2. 1감소시킨 ncli값이 0보다 작다는건 pushcli가 popcli보다 덜 되었다는건데 이럼 시스템 패닉!
   if(--mycpu()->ncli < 0)
     panic("popcli");
+  //3. ncli가 0인지 확인 -> 모든 cli 다 치웠어? -> intena가 0이 아니라 1인지 확인 -> 기존에 인터럽트 활성화 시켰어? -> 인터럽트 활성화
   if(mycpu()->ncli == 0 && mycpu()->intena)
     sti();
 }

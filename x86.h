@@ -158,7 +158,7 @@ struct trapframe {
   uint ecx;
   uint eax;
 
-  // rest of trap frame
+  // rest of trap frame -> x86 Segment Register
   ushort gs;
   ushort padding1;
   ushort fs;
@@ -170,11 +170,11 @@ struct trapframe {
   uint trapno;
 
   // below here defined by x86 hardware
-  uint err;
-  uint eip;
-  ushort cs;
-  ushort padding5;
-  uint eflags;
+  uint err; // Error Code
+  uint eip; // 다음에 실행할 Instruction Pointer
+  ushort cs; // Code Segment
+  ushort padding5; 
+  uint eflags; // CPU EFLAGS
 
   // below here only when crossing rings, such as from user to kernel
   uint esp;
