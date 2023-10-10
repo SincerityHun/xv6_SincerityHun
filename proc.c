@@ -9,8 +9,8 @@
 
 struct
 {
-  struct spinlock lock; //Lock Information
-  struct proc proc[NPROC]; //최대 프로세스 개수(NPROC)만큼의 PCB 공간
+  struct spinlock lock;    // Lock Information
+  struct proc proc[NPROC]; // 최대 프로세스 개수(NPROC)만큼의 PCB 공간
 } ptable;
 
 static struct proc *initproc;
@@ -55,20 +55,20 @@ mycpu(void)
 
 // Disable interrupts so that we are not rescheduled
 // while reading proc from the cpu structure
-struct proc * 
+struct proc *
 myproc(void)
 {
   struct cpu *c;
   struct proc *p;
-  //1. 인터럽트 비활성화
+  // 1. 인터럽트 비활성화
   pushcli();
-  //2. CPU 정보 받기
+  // 2. CPU 정보 받기
   c = mycpu();
-  //3. 현재 이 CPU에서 돌고 있는 process 받아오기
+  // 3. 현재 이 CPU에서 돌고 있는 process 받아오기
   p = c->proc;
-  //4. 다시 인터럽트 활성화
+  // 4. 다시 인터럽트 활성화
   popcli();
-  //5. 현재 cpu에서 돌아가고 있는 process 반환
+  // 5. 현재 cpu에서 돌아가고 있는 process 반환
   return p;
 }
 
@@ -83,10 +83,10 @@ allocproc(void)
   struct proc *p;
   char *sp;
 
-  //1. ptable lock 걸기
+  // 1. ptable lock 걸기
   acquire(&ptable.lock);
-  
-  //2. UNUSED,,비어있는 Process 슬롯
+
+  // 2. UNUSED,,비어있는 Process 슬롯
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if (p->state == UNUSED)
       goto found;
@@ -95,12 +95,12 @@ allocproc(void)
   return 0;
 
 found:
-  //1. EMBRYO -> Process 상태 초기화 중
+  // 1. EMBRYO -> Process 상태 초기화 중
   p->state = EMBRYO;
   p->pid = nextpid++;
   p->nice = 20;
 
-  //2. ptable lock 풀기
+  // 2. ptable lock 풀기
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -124,7 +124,7 @@ found:
   sp -= sizeof *p->context;
   p->context = (struct context *)sp;
   memset(p->context, 0, sizeof *p->context); // Context Register 0으로 초기화
-  p->context->eip = (uint)forkret; //context의 Instruction Pointer를 Fork return 함수의 주소로 설정 
+  p->context->eip = (uint)forkret;           // context의 Instruction Pointer를 Fork return 함수의 주소로 설정
   //-> "처음으로 이 프로세스가 스케줄링 되어 CPU에서 실행되면 "forkret" 함수부터 실행하세요"
 
   return p;
@@ -425,7 +425,7 @@ void forkret(void)
     // Some initialization functions must be run in the context
     // of a regular process (e.g., they call sleep), and thus cannot
     // be run from main().
-    first = 0; //이 함수는 프로세스가 처음 생길때만 실행하도록 해야되기 때문에
+    first = 0; // 이 함수는 프로세스가 처음 생길때만 실행하도록 해야되기 때문에
     iinit(ROOTDEV);
     initlog(ROOTDEV);
   }
@@ -575,11 +575,14 @@ int getpname(int pid)
 
 int getnice(int pid)
 {
-  struct proc* p;
+  if (pid <= 0)
+    return -1;
+
+  struct proc *p;
   acquire(&ptable.lock);
-  for (p=ptable.proc; p < &ptable.proc[NPROC];p++)
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   {
-    if(p->pid == pid)
+    if (p->pid == pid)
     {
       int result = p->nice;
       release(&ptable.lock);
@@ -592,16 +595,16 @@ int getnice(int pid)
 
 int setnice(int pid, int value)
 {
-  if (value < 0 || value > 39)
+  if (value < 0 || value > 39 || pid <= 0)
   {
     return -1;
   }
 
-  struct proc* p;
+  struct proc *p;
   acquire(&ptable.lock);
-  for (p=ptable.proc; p < &ptable.proc[NPROC]; p++)
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   {
-    if(p->pid == pid)
+    if (p->pid == pid)
     {
       p->nice = value;
       release(&ptable.lock);
@@ -614,19 +617,19 @@ int setnice(int pid, int value)
 
 void ps(int pid)
 {
-  struct proc* p;
-  struct proc* temp[NPROC];
+  struct proc *p;
+  struct proc *temp[NPROC];
   int count = 0;
-  const char* stateNames[] = {"UNUSED", "EMBRYO", "SLEEPING", "RUNNABLE", "RUNNING", "ZOMBIE"};
+  const char *stateNames[] = {"UNUSED", "EMBRYO", "SLEEPING", "RUNNABLE", "RUNNING", "ZOMBIE"};
   acquire(&ptable.lock);
-  if(pid)
+  if (pid)
   {
-    for(p=ptable.proc; p < &ptable.proc[NPROC]; p++)
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     {
-      if(p->pid == pid && p->state != UNUSED)
+      if (p->pid == pid && p->state != UNUSED)
       {
-        cprintf("%12s%12s%12s%12s\n","name","pid","state","priority"); // Space 12
-        cprintf("%12s%12d%12s%12d\n",p->name,p->pid,stateNames[p->state],p->nice);
+        cprintf("%12s%12s%12s%12s\n", "name", "pid", "state", "priority"); // Space 12
+        cprintf("%12s%12d%12s%12d\n", p->name, p->pid, stateNames[p->state], p->nice);
         release(&ptable.lock);
         return;
       }
@@ -634,20 +637,20 @@ void ps(int pid)
   }
   else
   {
-    for(p=ptable.proc; p< &ptable.proc[NPROC];p++)
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     {
-      if(p->state != UNUSED)
+      if (p->state != UNUSED)
       {
         temp[count++] = p;
       }
     }
-    if(count)
+    if (count)
     {
-      cprintf("%12s%12s%12s%12s\n","name","pid","state","priority");
+      cprintf("%12s%12s%12s%12s\n", "name", "pid", "state", "priority");
     }
-    for(int i = 0; i < count; i++)
+    for (int i = 0; i < count; i++)
     {
-      cprintf("%12s%12d%12s%12d\n",temp[i]->name,temp[i]->pid,stateNames[temp[i]->state],temp[i]->nice);
+      cprintf("%12s%12d%12s%12d\n", temp[i]->name, temp[i]->pid, stateNames[temp[i]->state], temp[i]->nice);
     }
     release(&ptable.lock);
     return;

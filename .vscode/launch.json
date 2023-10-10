@@ -6,8 +6,8 @@
       "type": "lldb",
       "request": "launch",
       "args": [],
-      "cwd": "/Users/jeongseonghun/Desktop/Workspace/SKKU_3th/OS_SYSTEM/xv6_SincerityHun",
-      "program": "/Users/jeongseonghun/Desktop/Workspace/SKKU_3th/OS_SYSTEM/xv6_SincerityHun/build/Debug/outDebug"
+      "cwd": "/Users/jeongseonghun/Desktop/Workspace/github/xv6_SincerityHun",
+      "program": "/Users/jeongseonghun/Desktop/Workspace/github/xv6_SincerityHun/build/Debug/outDebug"
     }
   ]
 }
