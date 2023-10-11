@@ -17,10 +17,12 @@
 int
 fetchint(uint addr, int *ip)
 {
+  //1. 현재 프로세스 가져오기
   struct proc *curproc = myproc();
-
+  //2. address가 현재 프로세스의 메모리를 넘어서는 경우는 오류 발생
   if(addr >= curproc->sz || addr+4 > curproc->sz)
     return -1;
+  //3. address에 해당하는 값을 주소에 해당하는 4바이트 값을 읽어서 ip가 가리키는 곳에 넣어두기
   *ip = *(int*)(addr);
   return 0;
 }
@@ -49,6 +51,8 @@ fetchstr(uint addr, char **pp)
 int
 argint(int n, int *ip)
 {
+  //myproc()->tf->esp란 현재 프로세스의 스택 제일 꼭대기 주소
+  //제일 꼭대기 주소 + 4 + 4 * n하면 현재 프로세스의 n번째 인자를 가져와 ip에 넣어두기
   return fetchint((myproc()->tf->esp) + 4 + 4*n, ip);
 }
 

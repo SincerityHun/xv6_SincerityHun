@@ -9,8 +9,13 @@
 
 struct
 {
+<<<<<<< HEAD
   struct spinlock lock;
   struct proc proc[NPROC];
+=======
+  struct spinlock lock; //Lock Information
+  struct proc proc[NPROC]; //최대 프로세스 개수(NPROC)만큼의 PCB 공간
+>>>>>>> origin/master
 } ptable;
 
 static struct proc *initproc;
@@ -55,15 +60,24 @@ mycpu(void)
 
 // Disable interrupts so that we are not rescheduled
 // while reading proc from the cpu structure
+<<<<<<< HEAD
 struct proc *
+=======
+struct proc * 
+>>>>>>> origin/master
 myproc(void)
 {
   struct cpu *c;
   struct proc *p;
+  //1. 인터럽트 비활성화
   pushcli();
+  //2. CPU 정보 받기
   c = mycpu();
+  //3. 현재 이 CPU에서 돌고 있는 process 받아오기
   p = c->proc;
+  //4. 다시 인터럽트 활성화
   popcli();
+  //5. 현재 cpu에서 돌아가고 있는 process 반환
   return p;
 }
 
@@ -78,8 +92,14 @@ allocproc(void)
   struct proc *p;
   char *sp;
 
+  //1. ptable lock 걸기
   acquire(&ptable.lock);
+<<<<<<< HEAD
 
+=======
+  
+  //2. UNUSED,,비어있는 Process 슬롯
+>>>>>>> origin/master
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if (p->state == UNUSED)
       goto found;
@@ -88,10 +108,12 @@ allocproc(void)
   return 0;
 
 found:
+  //1. EMBRYO -> Process 상태 초기화 중
   p->state = EMBRYO;
   p->pid = nextpid++;
   p->nice = 20;
 
+  //2. ptable lock 풀기
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -100,21 +122,28 @@ found:
     p->state = UNUSED;
     return 0;
   }
-  sp = p->kstack + KSTACKSIZE;
+  sp = p->kstack + KSTACKSIZE; // Stack Pointer
 
-  // Leave room for trap frame.
+  // Leave room for trap frame. -> trap frame 만큼 pointer 이동
   sp -= sizeof *p->tf;
   p->tf = (struct trapframe *)sp;
 
   // Set up new context to start executing at forkret,
-  // which returns to trapret.
+  // which returns to trapret. -> 반환 주소(trap return) 저장 공간 확보, 즉 이 프로세스로 다시 돌아오려면 여기로 돌아오세요~
   sp -= 4;
   *(uint *)sp = (uint)trapret;
 
+  // Context 저장 공간 확보
   sp -= sizeof *p->context;
   p->context = (struct context *)sp;
+<<<<<<< HEAD
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
+=======
+  memset(p->context, 0, sizeof *p->context); // Context Register 0으로 초기화
+  p->context->eip = (uint)forkret; //context의 Instruction Pointer를 Fork return 함수의 주소로 설정 
+  //-> "처음으로 이 프로세스가 스케줄링 되어 CPU에서 실행되면 "forkret" 함수부터 실행하세요"
+>>>>>>> origin/master
 
   return p;
 }
@@ -414,7 +443,7 @@ void forkret(void)
     // Some initialization functions must be run in the context
     // of a regular process (e.g., they call sleep), and thus cannot
     // be run from main().
-    first = 0;
+    first = 0; //이 함수는 프로세스가 처음 생길때만 실행하도록 해야되기 때문에
     iinit(ROOTDEV);
     initlog(ROOTDEV);
   }
@@ -564,8 +593,11 @@ int getpname(int pid)
 
 int getnice(int pid)
 {
+<<<<<<< HEAD
   if(pid <= 0)
     return -1;
+=======
+>>>>>>> origin/master
   struct proc* p;
   acquire(&ptable.lock);
   for (p=ptable.proc; p < &ptable.proc[NPROC];p++)
@@ -583,7 +615,11 @@ int getnice(int pid)
 
 int setnice(int pid, int value)
 {
+<<<<<<< HEAD
   if (value < 0 || value > 39 || pid<=0)
+=======
+  if (value < 0 || value > 39)
+>>>>>>> origin/master
   {
     return -1;
   }
@@ -605,8 +641,11 @@ int setnice(int pid, int value)
 
 void ps(int pid)
 {
+<<<<<<< HEAD
   if(pid <= 0)
     return;
+=======
+>>>>>>> origin/master
   struct proc* p;
   struct proc* temp[NPROC];
   int count = 0;

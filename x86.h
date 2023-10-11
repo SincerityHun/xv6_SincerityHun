@@ -94,6 +94,7 @@ ltr(ushort sel)
 static inline uint
 readeflags(void)
 {
+  //eflags 레지스터 32개의 비트를 32비트 uint에 저장해 반환하는 것
   uint eflags;
   asm volatile("pushfl; popl %0" : "=r" (eflags));
   return eflags;
@@ -108,6 +109,7 @@ loadgs(ushort v)
 static inline void
 cli(void)
 {
+  //CPU로 들어오는 모든 하드웨어 인터럽트 비활성화
   asm volatile("cli");
 }
 
@@ -158,7 +160,7 @@ struct trapframe {
   uint ecx;
   uint eax;
 
-  // rest of trap frame
+  // rest of trap frame -> x86 Segment Register
   ushort gs;
   ushort padding1;
   ushort fs;
@@ -170,11 +172,11 @@ struct trapframe {
   uint trapno;
 
   // below here defined by x86 hardware
-  uint err;
-  uint eip;
-  ushort cs;
-  ushort padding5;
-  uint eflags;
+  uint err; // Error Code
+  uint eip; // 다음에 실행할 Instruction Pointer
+  ushort cs; // Code Segment
+  ushort padding5; 
+  uint eflags; // CPU EFLAGS
 
   // below here only when crossing rings, such as from user to kernel
   uint esp;
