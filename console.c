@@ -25,11 +25,11 @@ static struct {
 } cons;
 
 static void
-printint(int xx, int base, int sign)
+printint(int xx, int base, int sign,int width)
 {
   static char digits[] = "0123456789abcdef";
   char buf[16];
-  int i;
+  int i,len;
   uint x;
 
   if(sign && (sign = xx < 0))
@@ -45,8 +45,14 @@ printint(int xx, int base, int sign)
   if(sign)
     buf[i++] = '-';
 
+  // Space Compute
+  len = i;;
+
   while(--i >= 0)
     consputc(buf[i]);
+
+  for(;width>len; width--)
+    consputc(' ');
 }
 //PAGEBREAK: 50
 
@@ -54,6 +60,7 @@ printint(int xx, int base, int sign)
 void
 cprintf(char *fmt, ...)
 {
+  int width; // Space + Right Justify
   int i, c, locking;
   uint *argp;
   char *s;
@@ -71,22 +78,38 @@ cprintf(char *fmt, ...)
       consputc(c);
       continue;
     }
+    // Space Init
+    width = 0;
+
     c = fmt[++i] & 0xff;
+    while(c >= '0' && c <= '9'){
+      width = width *10 + c - '0';
+      c = fmt[++i] & 0xff;
+    }
+
     if(c == 0)
       break;
     switch(c){
     case 'd':
-      printint(*argp++, 10, 1);
+      printint(*argp++, 10, 1, width);
       break;
     case 'x':
     case 'p':
-      printint(*argp++, 16, 0);
+      printint(*argp++, 16, 0, width);
       break;
     case 's':
       if((s = (char*)*argp++) == 0)
         s = "(null)";
+      //Space Compute
+      int len = strlen(s);
+
       for(; *s; s++)
         consputc(*s);
+
+      //Space Compute
+      for(;width > len; width--)
+        consputc(' ');
+
       break;
     case '%':
       consputc('%');
