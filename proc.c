@@ -9,8 +9,8 @@
 
 struct
 {
-  struct spinlock lock;    // Lock Information
-  struct proc proc[NPROC]; // 최대 프로세스 개수(NPROC)만큼의 PCB 공간
+  struct spinlock lock; //Lock Information
+  struct proc proc[NPROC]; //최대 프로세스 개수(NPROC)만큼의 PCB 공간
 } ptable;
 
 static struct proc *initproc;
@@ -55,7 +55,7 @@ mycpu(void)
 
 // Disable interrupts so that we are not rescheduled
 // while reading proc from the cpu structure
-struct proc *
+struct proc * 
 myproc(void)
 {
   struct cpu *c;
@@ -85,8 +85,7 @@ allocproc(void)
 
   // 1. ptable lock 걸기
   acquire(&ptable.lock);
-
-  // 2. UNUSED,,비어있는 Process 슬롯
+  //2. UNUSED,,비어있는 Process 슬롯
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if (p->state == UNUSED)
       goto found;
@@ -575,10 +574,9 @@ int getpname(int pid)
 
 int getnice(int pid)
 {
-  if (pid <= 0)
+  if(pid <= 0)
     return -1;
-
-  struct proc *p;
+  struct proc* p;
   acquire(&ptable.lock);
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   {
@@ -595,7 +593,7 @@ int getnice(int pid)
 
 int setnice(int pid, int value)
 {
-  if (value < 0 || value > 39 || pid <= 0)
+  if (value < 0 || value > 39 || pid<=0)
   {
     return -1;
   }
@@ -617,8 +615,10 @@ int setnice(int pid, int value)
 
 void ps(int pid)
 {
-  struct proc *p;
-  struct proc *temp[NPROC];
+  if(pid <= 0)
+    return;
+  struct proc* p;
+  struct proc* temp[NPROC];
   int count = 0;
   const char *stateNames[] = {"UNUSED", "EMBRYO", "SLEEPING", "RUNNABLE", "RUNNING", "ZOMBIE"};
   acquire(&ptable.lock);
