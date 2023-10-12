@@ -90,6 +90,7 @@ allocproc(void)
     if (p->state == UNUSED)
       goto found;
 
+  //3. UNUSED가 없다면?
   release(&ptable.lock);
   return 0;
 
@@ -198,42 +199,50 @@ int fork(void)
   struct proc *np;
   struct proc *curproc = myproc();
 
-  // Allocate process.
+  // Allocate process. -> 메모리 공간 할당
   if ((np = allocproc()) == 0)
   {
     return -1;
   }
 
   // Copy process state from proc.
+  // 현재 프로세스(부모 프로세스)의 Page Dir을 복사해간다.
   if ((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0)
   {
+    // 실패하면 걍 0으로 돌림
     kfree(np->kstack);
     np->kstack = 0;
     np->state = UNUSED;
     return -1;
   }
+  // 현재 프로세스(부모)의 정보를 상속 받는 중
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
 
-  // Clear %eax so that fork returns 0 in the child.
+  // Clear %eax so that fork returns 0 in the child. -> 자식 프로세스에게는 0을 반환
   np->tf->eax = 0;
 
+  // 부모 프로세스의 열린 파일 디스크립터를 자식 프로세스에 복사
   for (i = 0; i < NOFILE; i++)
     if (curproc->ofile[i])
       np->ofile[i] = filedup(curproc->ofile[i]);
   np->cwd = idup(curproc->cwd);
 
+  // 부모 프로세스의 이름을 자식 프로세스에 복사
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
   pid = np->pid;
 
+  // Ptable에 락걸기
   acquire(&ptable.lock);
 
+  // 현재 프로세스 Runnable 큐에 넣기
   np->state = RUNNABLE;
 
   release(&ptable.lock);
 
+  // 부모 프로세스에게 자식 프로세스 pid를 반환
   return pid;
 }
 
@@ -246,6 +255,7 @@ void exit(void)
   struct proc *p;
   int fd;
 
+  //초기 프로세스면 패닉
   if (curproc == initproc)
     panic("init exiting");
 
@@ -259,6 +269,7 @@ void exit(void)
     }
   }
 
+  // 현재 작업중인 디렉토리 해제,  Current Working Directory
   begin_op();
   iput(curproc->cwd);
   end_op();
@@ -266,7 +277,7 @@ void exit(void)
 
   acquire(&ptable.lock);
 
-  // Parent might be sleeping in wait().
+  // Parent might be sleeping in wait(). 
   wakeup1(curproc->parent);
 
   // Pass abandoned children to init.
@@ -274,7 +285,9 @@ void exit(void)
   {
     if (p->parent == curproc)
     {
+      //부모가 자식보다 먼저 죽어버리면 자식을 init에게 줌.
       p->parent = initproc;
+      // 근데 그 자식이 zombie라면 initproc을 깨워야함 -> initproc가 얘를 처리하도록 어떻게 처리할까..?
       if (p->state == ZOMBIE)
         wakeup1(initproc);
     }
@@ -290,6 +303,11 @@ void exit(void)
 // Return -1 if this process has no children.
 int wait(void)
 {
+  /*
+  현재 프로세스가 자식 프로세스를 가지고 있을 때 그 자식 중 하나가 종료될 때까지 대기.
+  하나라도 종료되면 그 자식 pid 반환.
+  없거나 현재 프로세스가 종료 요청을 받으면 -1을 반환한다.
+  */
   struct proc *p;
   int havekids, pid;
   struct proc *curproc = myproc();
@@ -343,6 +361,7 @@ int wait(void)
 //       via swtch back to the scheduler.
 void scheduler(void)
 {
+  // Initialization
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
@@ -353,20 +372,23 @@ void scheduler(void)
     sti();
 
     // Loop over process table looking for process to run.
-    acquire(&ptable.lock);
+    acquire(&ptable.lock); // Lock the Process table
     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     {
+      // 1. Runnable 한게 없으면 스킵
       if (p->state != RUNNABLE)
         continue;
 
+      // 2. Runnable 한게 있어? Switch 진행시켜
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
+      c->proc = p; // Cpu의 실행 process를 이걸로
+      switchuvm(p); // CPU가 주어진 프로세스의 가상 메모리 주소 공간을 사용하도록
       p->state = RUNNING;
 
       swtch(&(c->scheduler), p->context);
+      // 3. 끝났어(exit or preempted) -> 다시 스케쥴러에게 컨트롤 줘라
       switchkvm();
 
       // Process is done running for now.
@@ -386,7 +408,8 @@ void scheduler(void)
 // there's no process.
 void sched(void)
 {
-  int intena;
+  // 현재 실행 중인 프로세스의 Context를 스케줄러의 Context로 스위칭
+  int intena; 
   struct proc *p = myproc();
 
   if (!holding(&ptable.lock))
@@ -397,16 +420,18 @@ void sched(void)
     panic("sched running");
   if (readeflags() & FL_IF)
     panic("sched interruptible");
-  intena = mycpu()->intena;
-  swtch(&p->context, mycpu()->scheduler);
-  mycpu()->intena = intena;
+  intena = mycpu()->intena; // 현재 CPU의 INTR 활성화 상태 저장
+  swtch(&p->context, mycpu()->scheduler); // 현재 프로세스의 컨텍스트에서 스케줄러의 컨텍스트로 전환
+  mycpu()->intena = intena; //현재 CPU에 INTR 상태 복원
 }
 
-// Give up the CPU for one scheduling round.
+// Give up the CPU for one scheduling round. (Preempted)
 void yield(void)
 {
   acquire(&ptable.lock); // DOC: yieldlock
+  //현재 가지고 있는 프로세스의 state을 RUNNABLE로 바꾸기(Ready)
   myproc()->state = RUNNABLE;
+  //스케줄러 컨텍스트로 변경
   sched();
   release(&ptable.lock);
 }
@@ -479,7 +504,7 @@ static void
 wakeup1(void *chan)
 {
   struct proc *p;
-
+  // chan 안에서 Sleeping 중이던거 꺠우는
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if (p->state == SLEEPING && p->chan == chan)
       p->state = RUNNABLE;
@@ -488,6 +513,7 @@ wakeup1(void *chan)
 // Wake up all processes sleeping on chan.
 void wakeup(void *chan)
 {
+  //락 걸고 해야해~
   acquire(&ptable.lock);
   wakeup1(chan);
   release(&ptable.lock);

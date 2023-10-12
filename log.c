@@ -125,15 +125,20 @@ recover_from_log(void)
 void
 begin_op(void)
 {
+  //로깅 시작
+  //로그 락 걸기
   acquire(&log.lock);
   while(1){
     if(log.committing){
+      //로그 작성 완료할 때 까지 대기
       sleep(&log, &log.lock);
     } else if(log.lh.n + (log.outstanding+1)*MAXOPBLOCKS > LOGSIZE){
       // this op might exhaust log space; wait for commit.
       sleep(&log, &log.lock);
     } else {
+      //로그 연산 수 1 증가
       log.outstanding += 1;
+      //로그 락 해제
       release(&log.lock);
       break;
     }
