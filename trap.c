@@ -36,17 +36,26 @@ idtinit(void)
 void
 trap(struct trapframe *tf)
 {
+  // SYSCALL 또는 INTR 또는 Exception이 발생하면 CPU에 의해 호출된다.
+  // 1.SYSCALL 이 불릴 경우에
   if(tf->trapno == T_SYSCALL){
+    // 현재 프로세스가 이미 죽었다면? SYSCALL 못 부른다.
     if(myproc()->killed)
       exit();
+    // 현재 프로세스의 trapframe을 INTR 혹은 EXCEPTION이 불렸을 경우에 있던 프레임을 그대로 가져온다.
     myproc()->tf = tf;
-    syscall();
+    // syscall 수행
+    syscall(); 
+    // syscall 수행 후 죽었는지 확인
     if(myproc()->killed)
       exit();
+    
     return;
   }
 
+  // 2. INTR이나 EXCEPTION이 불릴 경우에
   switch(tf->trapno){
+    //TIMER INTR
   case T_IRQ0 + IRQ_TIMER:
     if(cpuid() == 0){
       acquire(&tickslock);
@@ -56,21 +65,30 @@ trap(struct trapframe *tf)
     }
     lapiceoi();
     break;
+    // DISK INTR
   case T_IRQ0 + IRQ_IDE:
     ideintr();
     lapiceoi();
     break;
+
+    //IDE1 INTR (가짜 인터럽트))
   case T_IRQ0 + IRQ_IDE+1:
     // Bochs generates spurious IDE1 interrupts.
     break;
+
+    //KEYBOARD INTR
   case T_IRQ0 + IRQ_KBD:
     kbdintr();
     lapiceoi();
     break;
+
+    //UART INTR
   case T_IRQ0 + IRQ_COM1:
     uartintr();
     lapiceoi();
     break;
+    
+    //예기치 못한 INTR
   case T_IRQ0 + 7:
   case T_IRQ0 + IRQ_SPURIOUS:
     cprintf("cpu%d: spurious interrupt at %x:%x\n",

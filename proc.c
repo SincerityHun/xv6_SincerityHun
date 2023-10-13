@@ -9,8 +9,8 @@
 
 struct
 {
-  struct spinlock lock; //Lock Information
-  struct proc proc[NPROC]; //최대 프로세스 개수(NPROC)만큼의 PCB 공간
+  struct spinlock lock;    // Lock Information
+  struct proc proc[NPROC]; // 최대 프로세스 개수(NPROC)만큼의 PCB 공간
 } ptable;
 
 static struct proc *initproc;
@@ -55,7 +55,7 @@ mycpu(void)
 
 // Disable interrupts so that we are not rescheduled
 // while reading proc from the cpu structure
-struct proc * 
+struct proc *
 myproc(void)
 {
   struct cpu *c;
@@ -85,12 +85,12 @@ allocproc(void)
 
   // 1. ptable lock 걸기
   acquire(&ptable.lock);
-  //2. UNUSED,,비어있는 Process 슬롯
+  // 2. UNUSED,,비어있는 Process 슬롯
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if (p->state == UNUSED)
       goto found;
 
-  //3. UNUSED가 없다면?
+  // 3. UNUSED가 없다면?
   release(&ptable.lock);
   return 0;
 
@@ -255,7 +255,7 @@ void exit(void)
   struct proc *p;
   int fd;
 
-  //초기 프로세스면 패닉
+  // 초기 프로세스면 패닉
   if (curproc == initproc)
     panic("init exiting");
 
@@ -277,7 +277,7 @@ void exit(void)
 
   acquire(&ptable.lock);
 
-  // Parent might be sleeping in wait(). 
+  // Parent might be sleeping in wait().
   wakeup1(curproc->parent);
 
   // Pass abandoned children to init.
@@ -285,7 +285,7 @@ void exit(void)
   {
     if (p->parent == curproc)
     {
-      //부모가 자식보다 먼저 죽어버리면 자식을 init에게 줌.
+      // 부모가 자식보다 먼저 죽어버리면 자식을 init에게 줌.
       p->parent = initproc;
       // 근데 그 자식이 zombie라면 initproc을 깨워야함 -> initproc가 얘를 처리하도록 어떻게 처리할까..?
       if (p->state == ZOMBIE)
@@ -383,7 +383,7 @@ void scheduler(void)
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
-      c->proc = p; // Cpu의 실행 process를 이걸로
+      c->proc = p;  // Cpu의 실행 process를 이걸로
       switchuvm(p); // CPU가 주어진 프로세스의 가상 메모리 주소 공간을 사용하도록
       p->state = RUNNING;
 
@@ -409,7 +409,7 @@ void scheduler(void)
 void sched(void)
 {
   // 현재 실행 중인 프로세스의 Context를 스케줄러의 Context로 스위칭
-  int intena; 
+  int intena;
   struct proc *p = myproc();
 
   if (!holding(&ptable.lock))
@@ -420,18 +420,18 @@ void sched(void)
     panic("sched running");
   if (readeflags() & FL_IF)
     panic("sched interruptible");
-  intena = mycpu()->intena; // 현재 CPU의 INTR 활성화 상태 저장
+  intena = mycpu()->intena;               // 현재 CPU의 INTR 활성화 상태 저장
   swtch(&p->context, mycpu()->scheduler); // 현재 프로세스의 컨텍스트에서 스케줄러의 컨텍스트로 전환
-  mycpu()->intena = intena; //현재 CPU에 INTR 상태 복원
+  mycpu()->intena = intena;               // 현재 CPU에 INTR 상태 복원
 }
 
 // Give up the CPU for one scheduling round. (Preempted)
 void yield(void)
 {
   acquire(&ptable.lock); // DOC: yieldlock
-  //현재 가지고 있는 프로세스의 state을 RUNNABLE로 바꾸기(Ready)
+  // 현재 가지고 있는 프로세스의 state을 RUNNABLE로 바꾸기(Ready)
   myproc()->state = RUNNABLE;
-  //스케줄러 컨텍스트로 변경
+  // 스케줄러 컨텍스트로 변경
   sched();
   release(&ptable.lock);
 }
@@ -513,7 +513,7 @@ wakeup1(void *chan)
 // Wake up all processes sleeping on chan.
 void wakeup(void *chan)
 {
-  //락 걸고 해야해~
+  // 락 걸고 해야해~
   acquire(&ptable.lock);
   wakeup1(chan);
   release(&ptable.lock);
@@ -600,9 +600,9 @@ int getpname(int pid)
 
 int getnice(int pid)
 {
-  if(pid <= 0)
+  if (pid <= 0)
     return -1;
-  struct proc* p;
+  struct proc *p;
   acquire(&ptable.lock);
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   {
@@ -619,7 +619,7 @@ int getnice(int pid)
 
 int setnice(int pid, int value)
 {
-  if (value < 0 || value > 39 || pid<=0)
+  if (value < 0 || value > 39 || pid <= 0)
   {
     return -1;
   }
@@ -641,10 +641,10 @@ int setnice(int pid, int value)
 
 void ps(int pid)
 {
-  if(pid <= 0)
+  if (pid < 0)
     return;
-  struct proc* p;
-  struct proc* temp[NPROC];
+  struct proc *p;
+  struct proc *temp[NPROC];
   int count = 0;
   const char *stateNames[] = {"UNUSED", "EMBRYO", "SLEEPING", "RUNNABLE", "RUNNING", "ZOMBIE"};
   acquire(&ptable.lock);
