@@ -33,6 +33,7 @@ void idtinit(void)
 // PAGEBREAK: 41
 void trap(struct trapframe *tf)
 {
+  int err;
   // SYSCALL 또는 INTR 또는 Exception이 발생하면 CPU에 의해 호출된다.
   // 1.SYSCALL 이 불릴 경우에
   if (tf->trapno == T_SYSCALL)
@@ -88,6 +89,10 @@ void trap(struct trapframe *tf)
     lapiceoi();
     break;
 
+  case T_PGFLT:
+    err = tf->err & 2 ? 2 : 1;
+    if(page_fault_handler(rcr2(),err) != -1)
+      break;
     // 예기치 못한 INTR
   case T_IRQ0 + 7:
   case T_IRQ0 + IRQ_SPURIOUS:

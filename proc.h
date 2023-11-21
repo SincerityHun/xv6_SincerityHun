@@ -61,13 +61,13 @@ struct proc
   struct inode *cwd;          // Current directory
   char name[16];              // Process name (debugging)
   int nice;                   // NICE Value [default = 20, 0 <= nice value <= 39]
-  //PA2
-  int weight;                 // nice값에 따른 가중치
-  uint vruntime_high;         // high virtual runtime -> 밀리틱 단위
-  uint vruntime_low;          // low virtual runtime -> 밀리틱 단위
-  uint aruntime;              // actual runtime -> 실제 전체 얼만큼 밀리틱 단위
-  uint aruntime_prev;         // Previous Actual Runtime -> 이번에 CPU 잡기 전에 얼만큼 썼었는지
-  uint timeslice;             // current timeslice -> 밀리틱 단위,
+  // PA2
+  int weight;         // nice값에 따른 가중치
+  uint vruntime_high; // high virtual runtime -> 밀리틱 단위
+  uint vruntime_low;  // low virtual runtime -> 밀리틱 단위
+  uint aruntime;      // actual runtime -> 실제 전체 얼만큼 밀리틱 단위
+  uint aruntime_prev; // Previous Actual Runtime -> 이번에 CPU 잡기 전에 얼만큼 썼었는지
+  uint timeslice;     // current timeslice -> 밀리틱 단위,
 };
 
 // Process memory is laid out contiguously, low addresses first:

@@ -306,7 +306,7 @@ int fork(void)
   np->state = RUNNABLE;
 
   release(&ptable.lock);
-
+  map_fork(np);
   // 부모 프로세스에게 자식 프로세스 pid를 반환
   return pid;
 }
