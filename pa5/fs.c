@@ -671,21 +671,22 @@ nameiparent(char *path, char *name)
   return namex(path, 1, name);
 }
 
-void swapread(char* ptr, int blkno)
+void swapread(char* ptr, int blkno) // swap space blkno 위치에 접근해 physical page 읽어오기
 {
-	struct buf* bp;
+	struct buf* bp; //Disk에서 읽어온 데이터 저장하는 구조체 - block 저장
 	int i;
 
-	const int BLKS_PER_PG = PGSIZE/BSIZE;
+	const int BLKS_PER_PG = PGSIZE/BSIZE; // Page에 몇개의 block이 있는지
 
+  // block이 swap space 밖에 있는 경우
 	if ( blkno < 0 || blkno >= SWAPMAX / BLKS_PER_PG )
 		panic("swapread: blkno exceeded range");
 
 	for ( i=0; i < BLKS_PER_PG; ++i ) {
-		nr_sectors_read++;
-		bp = bread(0, SWAPBASE + BLKS_PER_PG * blkno + i);
-		memmove(ptr + i * BSIZE, bp->data, BSIZE);
-		brelse(bp);
+		nr_sectors_read++; // swapread 횟수 증가
+		bp = bread(0, SWAPBASE + BLKS_PER_PG * blkno + i); // blkno page의 i번째 block 읽어오기
+		memmove(ptr + i * BSIZE, bp->data, BSIZE); //읽어온 block의 data을 PM에 쓰기
+		brelse(bp); // block realease
 	}
 }
 
@@ -695,8 +696,8 @@ void swapwrite(char* ptr, int blkno)
 	int i;
 
 	const int BLKS_PER_PG = PGSIZE/BSIZE;
-
-	if ( blkno < 0 || blkno >= SWAPMAX / BLKS_PER_PG )
+  // block이 swap space 밖에 있는 경우
+  if ( blkno < 0 || blkno >= SWAPMAX / BLKS_PER_PG )
 		panic("swapwrite: blkno exceeded range");
 
 	for ( i=0; i < BLKS_PER_PG; ++i ) {

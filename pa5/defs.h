@@ -66,13 +66,21 @@ extern uchar    ioapicid;
 void            ioapicinit(void);
 
 // kalloc.c
+
+struct page *   page_lru_head;
 char*           kalloc(void);
 void            kfree(char*);
 void            kinit1(void*, void*);
 void            kinit2(void*, void*);
+void            set_bit(int index);
+void            clear_bit(int index);
+int             check_bit(int index);
+int             find_free_swap_index(void);
+void            append_lru (pde_t *pgdir, uint va, uint pa);
+void            pop_lru(uint pa);
 
 // kbd.c
-void            kbdintr(void);
+void kbdintr(void);
 
 // lapic.c
 void            cmostime(struct rtcdate *r);
@@ -166,9 +174,10 @@ void            idtinit(void);
 extern uint     ticks;
 void            tvinit(void);
 extern struct spinlock tickslock;
+int page_fault_hadler(pde_t *pgdir, uint vaddr);
 
 // uart.c
-void            uartinit(void);
+void uartinit(void);
 void            uartintr(void);
 void            uartputc(int);
 
@@ -187,6 +196,8 @@ void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t *pgdir, char *uva);
+pte_t *walkpgdir(pde_t *pgdir, const void *va, int alloc);
+void flush(void);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

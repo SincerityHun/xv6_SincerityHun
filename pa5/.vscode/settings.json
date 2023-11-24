@@ -1,10 +1,10 @@
 {
-  "C_Cpp_Runner.msvcBatchPath": "",
   "C_Cpp_Runner.cCompilerPath": "clang",
   "C_Cpp_Runner.cppCompilerPath": "clang++",
   "C_Cpp_Runner.debuggerPath": "lldb",
   "C_Cpp_Runner.cStandard": "",
   "C_Cpp_Runner.cppStandard": "",
+  "C_Cpp_Runner.msvcBatchPath": "",
   "C_Cpp_Runner.useMsvc": false,
   "C_Cpp_Runner.warnings": [
     "-Wall",
@@ -38,10 +38,7 @@
   "C_Cpp_Runner.compilerArgs": [],
   "C_Cpp_Runner.linkerArgs": [],
   "C_Cpp_Runner.includePaths": [],
-  "C_Cpp_Runner.includeSearch": [
-    "*",
-    "**/*"
-  ],
+  "C_Cpp_Runner.includeSearch": ["*", "**/*"],
   "C_Cpp_Runner.excludeSearch": [
     "**/build",
     "**/build/**",
@@ -57,24 +54,7 @@
   "C_Cpp_Runner.useLinkTimeOptimization": false,
   "C_Cpp_Runner.msvcSecureNoWarnings": false,
   "files.associations": {
-    "defs.h": "c",
-    "__bit_reference": "c",
-    "__config": "c",
-    "__hash_table": "c",
-    "__split_buffer": "c",
-    "array": "c",
-    "functional": "c",
-    "initializer_list": "c",
-    "ios": "c",
-    "iterator": "c",
-    "locale": "c",
-    "sstream": "c",
-    "string": "c",
-    "string_view": "c",
-    "unordered_map": "c",
-    "vector": "c",
     "param.h": "c",
-    "cstring": "c",
-    "__string": "c"
+    "defs.h": "c"
   }
 }

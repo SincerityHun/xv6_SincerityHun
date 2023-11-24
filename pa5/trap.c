@@ -77,8 +77,10 @@ trap(struct trapframe *tf)
             cpuid(), tf->cs, tf->eip);
     lapiceoi();
     break;
-
-  //PAGEBREAK: 13
+  case T_PGFLT:
+    if(page_fault_hadler(myproc()->pgdir,rcr2()))
+      break;
+  // PAGEBREAK: 13
   default:
     if(myproc() == 0 || (tf->cs&3) == 0){
       // In kernel, it must be our mistake.
@@ -109,4 +111,36 @@ trap(struct trapframe *tf)
   // Check if the process has been killed since we yielded
   if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER)
     exit();
+}
+
+int page_fault_hadler(pde_t* pgdir, uint vaddr)
+{
+  uint *pte;
+
+  //1. Swap out된거 때문에 발생한 page fault인지 확인해야한다.
+  pte = walkpgdir(pgdir, (char *)PGROUNDDOWN(vaddr),0);
+  if(*pte == 0)
+  {
+    return 0;
+  }
+
+  //2. Swap in 시키기 위해 새로운 페이지 생성
+  char *new_page = kalloc();
+  if(new_page == 0){
+    cprintf("Out of Memory\n");
+    return 0;
+  }
+  uint pa = V2P(new_page);
+
+  //3. swap space에서 읽어오기
+  int swap_index = *pte >> 12;
+  swapread(new_page, swap_index);
+  clear_bit(swap_index);
+
+  //4. PTE Update + PTE_P set
+  *pte = pa | PTE_FLAGS(*pte) | PTE_P;
+
+  //5. Flush
+  flush();
+  return 1;
 }

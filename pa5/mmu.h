@@ -95,6 +95,7 @@ struct segdesc {
 #define PTE_W           0x002   // Writeable
 #define PTE_U           0x004   // User
 #define PTE_PS          0x080   // Page Size
+#define PTE_A           0x20    // Accessed bit in each PTE
 
 // Address in page table or page directory entry
 #define PTE_ADDR(pte)   ((uint)(pte) & ~0xFFF)
@@ -179,10 +180,10 @@ struct gatedesc {
 }
 
 struct page{
-	struct page *next;
-	struct page *prev;
-	pde_t *pgdir;
-	char *vaddr;
+	struct page *next; //다음 페이지
+	struct page *prev; //이전 페이지
+	pde_t *pgdir; //해당하는 프로세스
+	char *vaddr; //Virtual Address로 전환
 };
 
 
