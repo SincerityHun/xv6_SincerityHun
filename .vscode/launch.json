@@ -6,8 +6,8 @@
       "type": "lldb",
       "request": "launch",
       "args": [],
-      "cwd": "/Users/jeongseonghun/Desktop/workspace/github/xv6_SincerityHun/pa5",
-      "program": "/Users/jeongseonghun/Desktop/workspace/github/xv6_SincerityHun/pa5/build/Debug/outDebug"
+      "cwd": "/Users/jeongseonghun/Desktop/workspace/github/xv6_SincerityHun/page-replacement",
+      "program": "/Users/jeongseonghun/Desktop/workspace/github/xv6_SincerityHun/page-replacement/build/Debug/outDebug"
     }
   ]
 }
